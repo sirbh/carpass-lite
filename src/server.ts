@@ -8,8 +8,12 @@ import { ErrorHandler } from "./middleware";
 import swaggerDocs from "./swagger";
 import { PORT } from "./utility/Config";
 import * as path from "path";
+import dotenv from "dotenv";
 // import https from "https";
 
+dotenv.config({
+    override: true
+});
 
 const server = express();
 const upload = multer();

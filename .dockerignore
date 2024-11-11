@@ -10,6 +10,5 @@ tests
 ssh_keys
 .github
 .VSCodeCounter
-data
 jest.config.js
 nodemon.json
