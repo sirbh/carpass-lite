@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  backend:
+    image: backend-dev
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_BUCKET: ${AWS_BUCKET}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-dev
+    ports:
+      - "8080:8080"
