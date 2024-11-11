@@ -91,4 +91,4 @@ jobs:
             cp -r dist/* ../public/
             cd ..
             docker-compose -f docker-compose.pro.yml down
-            docker-compose --env-file .env -f .\docker-compose.pro.yml up -d --build
+            docker-compose --env-file .env -f docker-compose.pro.yml up -d --build
