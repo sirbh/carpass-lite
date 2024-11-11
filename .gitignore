@@ -6,4 +6,3 @@ database_dev
 *.pdf
 public
 docker-compose.pro.yml
-data
