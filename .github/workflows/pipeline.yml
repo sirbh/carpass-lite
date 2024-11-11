@@ -82,7 +82,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd trustcar/trustcar-back/
+            cd carpass-lite
             git checkout main
             git pull
             cd carpass-admin
@@ -91,5 +91,4 @@ jobs:
             cp -r dist/* ../public/
             cd ..
             docker-compose -f docker-compose.pro.yml down
-            docker-compose -f docker-compose.pro.yml up --build -d
-            docker-compose -f docker-compose.pro.yml exec -T backend npm run migrate
+            docker-compose --env-file .env -f .\docker-compose.pro.yml up -d --build
