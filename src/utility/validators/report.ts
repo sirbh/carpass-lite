@@ -225,7 +225,7 @@ export const initializeReportValidator = object().shape({
  *             type: string
  *             description: Name of the file to be uploaded.
  *           description: Array of file names to get URLs for uploading.
- *           example: ["file1.png", "file2.pdf"]
+ *           example: ["/org-123/usr-32/report-32/report-32-atch-1-time-123423.jpeg", "/org-123/usr-32/report-32/report-32-atch-2-time-12333.jpeg"]
  *       required:
  *         - file_names
  */

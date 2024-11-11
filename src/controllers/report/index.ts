@@ -644,7 +644,7 @@ export const getPutObejctURLs = async (
     for (const file of file_names) {
       const url = await getSignedUrl(s3, new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET || "",
-        Key: "/report/user/" + file,
+        Key: file,
       }));
       urls.push(url);
     }
