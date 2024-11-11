@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model organization {
+  id               Int                @id @default(autoincrement())
+  name             String?            @db.VarChar
+  type             organization_type
+  business_number  String?            @db.VarChar
+  address          String?            @db.VarChar
+  city             String?            @db.VarChar
+  postcode         Int?
+  phone            BigInt?
+  email            String?            @db.VarChar
+  created_at       DateTime?          @db.Timestamp(6)
+  updated_at       DateTime?          @db.Timestamp(6)
+  modified_by_user Int?
+  reports          report[]
+  users            user[]
+  // created_orders   order[]  @relation("ReceivedOrders")
+  // received_orders  order[]  @relation("CreatedOrders")
+  // created_delivered_orders           delivered_order[]  @relation("CreatedDeliveredOrders")
+  // received_delivered_orders  delivered_order[] @relation("ReceivedDeliveredOrders")
+}
+
+model user {
+  id               Int           @id @default(autoincrement()) @unique
+  firstname        String        @db.VarChar
+  lastname         String        @db.VarChar
+  email            String?
+  hashpassword     String?       @db.VarChar
+  role             String?       @db.VarChar
+  username         String        @unique @db.VarChar
+  password_salt    String        @db.VarChar
+  language_id      Int?
+  created_at       DateTime?     @db.Timestamp(6)
+  updated_at       DateTime?     @db.Timestamp(6)
+  modified_by_user Int?
+  organization_id  Int?
+  organization     organization? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  // created_orders   order[]  @relation("CreatedOrders")
+  // received_orders  order[]  @relation("ReceivedOrders")
+  // created_delivered_orders           delivered_order[]  @relation("CreatedDeliveredOrders")
+  // received_delivered_orders  delivered_order[] @relation("ReceivedDeliveredOrders")    
+}
+
+model report {
+  id                  Int           @id @default(autoincrement())
+  registration_number String?
+  production_number   String?
+  brand_and_model     String?
+  odometer_reading    Int?
+  created_at          DateTime?     @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?     @default(now()) @db.Timestamp(6)
+  modified_by_user    Int?
+  organization_id     Int?
+  engine_type         engine_type?
+  organization        organization? @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  report_rows         report_row[]
+}
+
+model report_row {
+  id                           Int                @id @default(autoincrement())
+  report_id                    Int?
+  question_id                  Int?               
+  inspection_status            inspection_status?
+  comment                      String?
+  created_at                   DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime?          @default(now()) @db.Timestamp(6)
+  modified_by_user             Int?
+  attachments                  attachments[]
+  question                     question?          @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  report                       report?            @relation(fields: [report_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  input_left                   Int?            
+  input_left_measurement       String?            
+  input_right                  Int?            
+  input_right_measurement      String?            
+  additional_input             Int?            
+  additional_input_measurement String?
+
+  @@unique([report_id, question_id])
+}
+
+model attachments {
+  id              Int              @id @default(autoincrement())
+  data            Bytes?
+  attachment_type attachment_type?
+  report_row_id   Int
+  report_row      report_row       @relation(fields: [report_row_id], references: [id])
+}
+
+model question {
+  id             Int                @id @unique
+  created_at     DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?          @default(now()) @db.Timestamp(6)
+  question_map   question_mapping[]
+  report_row     report_row[]
+  translations   translation[]
+  type           question_type
+}
+
+model section {
+  id               Int                @id @unique
+  created_at       DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?          @default(now()) @db.Timestamp(6)
+  unit_price       Int
+  question_map     question_mapping[]
+  translations     translation[]
+  // order            order_row[]
+  // delivered_order  delivered_order_row[]
+
+}
+
+model question_mapping {
+  id          Int         @id @default(autoincrement())
+  engine_type engine_type
+  report_type report_type
+  section_id  Int
+  question_id Int
+  question    question    @relation(fields: [question_id], references: [id])
+  section     section     @relation(fields: [section_id], references: [id])
+}
+
+model language {
+  id           Int           @id @unique
+  name         String        @db.VarChar
+  code         String        @db.VarChar
+  translations translation[]
+}
+
+model translation {
+  id          Int       @id @default(autoincrement())
+  value       String?   @db.VarChar
+  language_id Int
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  questionId  Int?
+  sectionId   Int?
+  language    language  @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question    question? @relation(fields: [questionId], references: [id])
+  section     section?  @relation(fields: [sectionId], references: [id])
+}
+
+// model order {
+//   id          Int       @id @default(autoincrement())
+//   created_at  DateTime? @default(now()) @db.Timestamp(6)
+//   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+//   customer_id     Int?
+//   inspector_id     Int?
+//   report_type   report_type
+//   customer       user?      @relation("CreatedOrders",fields: [customer_id], references: [id])
+//   inspector       user?      @relation("ReceivedOrders",fields: [inspector_id], references: [id])
+//   inspection_organization_id  Int
+//   customer_organization_id Int
+//   inspection_organization     organization @relation("CreatedOrders", fields: [inspection_organization_id], references: [id])
+//   customer_organization    organization @relation("ReceivedOrders", fields: [customer_organization_id], references: [id])
+//   registration_number String
+//   car_production_number String
+//   brand_and_model String
+//   engine_type engine_type?
+//   additional_information String?
+//   additional_information2 String?
+//   order_total_amount Int
+//   order_rows  order_row[]
+//   order_status order_status
+//   report_id Int? @unique
+//   report report? @relation(fields: [report_id], references: [id])
+
+// }
+
+// model order_row {
+//   id          Int       @id @default(autoincrement())
+//   created_at  DateTime? @default(now()) @db.Timestamp(6)
+//   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+//   order_id    Int
+//   order       order     @relation(fields: [order_id], references: [id])
+//   section_id  Int
+//   section     section   @relation(fields: [section_id], references: [id])
+// }
+
+// model delivered_order {
+//   id          Int       @id @default(autoincrement())
+//   created_at  DateTime? @default(now()) @db.Timestamp(6)
+//   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+//   customer_id     Int
+//   inspector_id     Int
+//   customer       user      @relation("CreatedDeliveredOrders",fields: [customer_id], references: [id])
+//   inspector       user      @relation("ReceivedDeliveredOrders",fields: [inspector_id], references: [id])
+//   inspection_organization_id  Int
+//   customer_organization_id Int
+//   inspection_organization     organization @relation("CreatedDeliveredOrders", fields: [inspection_organization_id], references: [id])
+//   customer_organization    organization @relation("ReceivedDeliveredOrders", fields: [customer_organization_id], references: [id])
+//   delivery_date      DateTime
+//   registration_number String
+//   car_production_number String
+//   brand_and_model String
+//   engine_type engine_type?
+//   additional_information String
+//   additional_information2 String
+//   order_total_amount Int
+//   delivered_order_row  delivered_order_row[]
+//   order_status order_status
+//   report_id Int @unique
+// }
+
+// model delivered_order_row {
+//   id          Int       @id @default(autoincrement())
+//   created_at  DateTime? @default(now()) @db.Timestamp(6)
+//   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+//   order_id    Int
+//   delivered_order       delivered_order     @relation(fields: [order_id], references: [id])
+//   section_id  Int
+//   section     section   @relation(fields: [section_id], references: [id])
+// }
+
+enum inspection_status {
+  red
+  yellow
+  green
+}
+
+enum organization_type {
+  maintenance
+  seller
+  inspection
+  repair
+}
+
+enum engine_type {
+  petrol
+  diesel
+  hybrid_diesel
+  hybrid_gasoline
+  electric
+  hybrid
+}
+
+enum report_type {
+  full
+  narrow
+  light
+}
+
+enum attachment_type {
+  image
+  audio
+}
+
+enum order_status {
+  started
+  not_started
+  ready
+}
+
+enum question_type {
+  description
+  leftrightnumeric
+  singlenumeric
+}

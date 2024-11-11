@@ -1,0 +1,5 @@
+dist
+nodemodules
+jest.config.js
+public
+carpass-admin

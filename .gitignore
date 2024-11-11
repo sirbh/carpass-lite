@@ -1,0 +1,9 @@
+node_modules
+dist
+database_dev
+.idea/
+.env
+*.pdf
+public
+docker-compose.pro.yml
+data

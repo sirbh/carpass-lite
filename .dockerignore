@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.dockerignore
+Dockerfile
+docker-compose.dev.yml
+.git
+.gitignore
+dist
+tests
+ssh_keys
+.github
+.VSCodeCounter
+data
+jest.config.js
+nodemon.json
