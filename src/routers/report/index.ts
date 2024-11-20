@@ -1,6 +1,6 @@
 import express from "express";
 import { RequestHandler } from "express";
-import { getReport, getReportStructure, saveReport, populateReport, initializeReport, getPutObejctURLs} from "../../controllers/report";
+import { getReport, getReportStructure, saveReport, populateReport, initializeReport, getPutObejctURLs, sendReport} from "../../controllers/report";
 import {
     validateGetReport,
     validateGetReportStructure,
@@ -8,6 +8,7 @@ import {
     validatePopulateReport,
     validateInitializeReport,
     validateGetPutObjectUrls,
+    sendReportValidator,
 } from "../../middleware/validate/report";
 import {TokenExtractor} from "../../middleware";
 
@@ -213,6 +214,40 @@ router.post(
     validateGetPutObjectUrls,
     TokenExtractor as RequestHandler,
     getPutObejctURLs as RequestHandler
+);
+
+
+/**
+ * @openapi
+ * /api/v1/report/sendemail:
+ *   post:
+ *     tags:
+ *       - Report
+ *     summary: Send a report via email
+ *     description: Fetches a report, generates a PDF, and sends it via email.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendReport'
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The email with the report was sent successfully
+ *       400:
+ *         description: Invalid request, validation error in parameters
+ *       404:
+ *         description: Report not found or translations missing
+ *       500:
+ *         description: Internal server error, email not sent
+ */
+router.post(
+    "/sendemail",
+    sendReportValidator,
+    TokenExtractor as RequestHandler,
+    sendReport as RequestHandler
 );
 
 export default router;

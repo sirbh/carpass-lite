@@ -3,6 +3,8 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 // import { PrismaClient, organization_type } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
+import puppeteer from "puppeteer";
+import  { renderFile } from "pug";
 import {
   getReportStructureValidator,
   saveReportValidator,
@@ -10,8 +12,11 @@ import {
   populateReportValidator,
   initializeReportValidator,
   getPutObejctURLsValidator,
+  validateSendReport,
 } from "../../utility/validators/report";
 import { ReportStructureResponse } from "../../utility/types/report";
+import {createTransport} from "nodemailer";
+import { MailOptions } from "nodemailer/lib/sendmail-transport";
 
 const prisma = new PrismaClient();
 
@@ -587,6 +592,7 @@ export const populateReport = async (
       }
     });
 
+
     res.render("report-skeleton", {
       headerSections: headerSections,
       sections: sections,
@@ -654,5 +660,303 @@ export const getPutObejctURLs = async (
     next(error);
   }
 };
+
+
+const transporter = createTransport({
+  service: "Gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+
+export const sendReport = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { language, registration_number, report_id, email } =
+    validateSendReport.cast(req.body);
+
+  const report_id_number = parseInt(report_id, 10);
+
+  try {
+    const reportData = await prisma.report.findUnique({
+      where: {
+        registration_number,
+        id: report_id_number,
+      },
+      include: {
+        organization: true,
+      },
+    });
+    if (!reportData || reportData === null) {
+      res.status(404).json({
+        message: "Report not found",
+      });
+    }
+    const inspectorId = reportData!.modified_by_user
+      ? reportData!.modified_by_user
+      : undefined;
+
+    const inspectorName = await prisma.user.findUnique({
+      where: {
+        id: inspectorId,
+      },
+      select: {
+        firstname: true,
+        lastname: true,
+      },
+    });
+    const sectionsData = await prisma.section.findMany({
+      select: {
+        id: true,
+        translations: {
+          where: {
+            language: {
+              is: {
+                code: language,
+              },
+            },
+          },
+          select: {
+            value: true,
+          },
+        },
+      },
+    });
+    const translationsData = await prisma.report.findUnique({
+      where: {
+        registration_number,
+        id: report_id_number,
+      },
+      select: {
+        registration_number: true,
+        production_number: true,
+        brand_and_model: true,
+        modified_by_user: true,
+        odometer_reading: true,
+        updated_at: true,
+        organization: true,
+        report_rows: {
+          select: {
+            comment: true,
+            inspection_status: true,
+            question: {
+              select: {
+                question_map: {
+                  select: {
+                    section_id: true,
+                  },
+                },
+                translations: {
+                  where: {
+                    language: {
+                      is: {
+                        code: language,
+                      },
+                    },
+                  },
+                  select: {
+                    value: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!translationsData || translationsData === null) {
+      res.status(404).json({
+        message: "Couldn't fetch report translations",
+      });
+    }
+
+    const breaklineTitle =
+      language === "en" ? "INSPECTION TARGETS" : "TARKASTUSKOHTEET";
+    const basicInfoTitle =
+      language === "en" ? "Basic information" : "Perustiedot";
+    const inspectorInfoTitle =
+      language === "en" ? "Inspector information" : "Tarkastajan tiedot";
+
+    const inspectorFullName =
+      inspectorName?.firstname && inspectorName?.lastname
+        ? inspectorName?.firstname + " " + inspectorName?.lastname
+        : "";
+
+    const headerSections = [
+      {
+        sectionName: basicInfoTitle,
+        rows: [
+          {
+            question:
+              language === "en" ? "Registration number" : "Rekisterinumero",
+            comment: reportData!.registration_number,
+          },
+          {
+            question: language === "en" ? "Brand and model" : "Merkki ja malli",
+            comment: reportData!.brand_and_model,
+          },
+          {
+            question:
+              language === "en" ? "Production number" : "Valmistenumero",
+            comment: reportData!.production_number,
+          },
+          {
+            question:
+              language === "en" ? "Odometer reading" : "Matkamittarin lukema",
+            comment: reportData!.odometer_reading,
+          },
+        ],
+      },
+      {
+        sectionName: inspectorInfoTitle,
+        rows: [
+          {
+            question: language === "en" ? "Inspector" : "Tarkastaja",
+            comment: inspectorFullName,
+          },
+          {
+            question: language === "en" ? "Inspection date" : "Tarkastuspäivä",
+            comment: reportData!.updated_at,
+          },
+          {
+            question:
+              language === "en" ? "Inspection station" : "Tarkastusasema",
+            comment: reportData!.organization?.name
+              ? reportData!.organization?.name
+              : "",
+          },
+          {
+            question:
+              language === "en"
+                ? "Station phone number"
+                : "Aseman puhelinnumero",
+            comment: reportData!.organization?.phone
+              ? reportData!.organization?.phone
+              : "",
+          },
+          {
+            question: language === "en" ? "Station address" : "Aseman osoite",
+            comment: reportData!.organization?.address
+              ? reportData!.organization?.address
+              : "",
+          },
+          {
+            question: language === "en" ? "Station email" : "Aseman sähköposti",
+            comment: reportData!.organization?.email
+              ? reportData!.organization?.email
+              : "",
+          },
+        ],
+      },
+    ];
+
+    const sections: {
+      sectionName: string;
+      rows: {
+        question: string | null | undefined;
+        status: string;
+        comment: string;
+      }[];
+    }[] = [];
+
+    translationsData!.report_rows.forEach((row) => {
+      const sectionId = row.question?.question_map[0]?.section_id;
+      const sectionName = sectionId
+        ? sectionsData.find((section) => section.id === sectionId)
+            ?.translations[0]?.value
+        : null;
+      const rowStatus = row.inspection_status ? row.inspection_status : "green";
+      const rowComment =
+        rowStatus === "green"
+          ? "Ok"
+          : row.comment
+          ? row.comment
+          : rowStatus === "red"
+          ? "red"
+          : "yellow";
+
+      if (sectionId && sectionName) {
+        let sectionIndex = sections.findIndex(
+          (group) => group.sectionName === sectionName
+        );
+        if (sectionIndex === -1) {
+          sections.push({ sectionName, rows: [] });
+          sectionIndex = sections.length - 1;
+        }
+
+        sections[sectionIndex].rows.push({
+          question: row.question?.translations[0]?.value,
+          status: rowStatus,
+          comment: rowComment,
+        });
+      }
+    });
+
+    // const html =  renderFile("C:\\Users\\soura\\OneDrive\\Desktop\\softEng\\carpass-lite\\src\\view\\report-skeleton.pug", {
+    const html = renderFile("src/view/report-skeleton.pug", {
+      headerSections: headerSections,
+      sections: sections,
+      breaklineTitle: breaklineTitle,
+    }
+    );
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    
+    // Load your HTML content
+    await page.setContent(html);
+    
+    // Convert the page to PDF
+    const pdfbuffer = Buffer.from(await page.pdf());
+
+    const mailOptions: MailOptions = {
+    from: process.env.EMAIL_USER,    // Sender address
+    to: email, // List of recipients
+    subject: "Car Inspection Report",
+    text: "Car Inspection Report",
+    attachments:[
+      {
+        filename: "report.pdf",
+        content: pdfbuffer,
+        encoding: "base64",
+      }
+    ]
+  };
+
+  try {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(500).json({
+          message: "Email not sent",
+        });
+      } else {
+        console.log("Email sent: " + info.response);
+        res.status(200).json({
+          message: "Email sent",
+        });
+  }
+}
+  );
+  }
+  catch (error) {
+    console.log(error);
+  }
+    
+    await browser.close();
+    
+  } catch (error) {
+    next(error);
+  }
+};
+  
 
 

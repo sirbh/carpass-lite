@@ -233,3 +233,40 @@ export const initializeReportValidator = object().shape({
 export const getPutObejctURLsValidator = object().shape({
     file_names: array().of(string().trim().required("File name is required")).required("File names array is required"),
 });
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     SendReport:
+ *       type: object
+ *       properties:
+ *         registration_number:
+ *           type: string
+ *           description: The registration number of the vehicle.
+ *           example: "ABC1234"
+ *         report_id:
+ *           type: string
+ *           description: The unique ID of the report.
+ *           example: "report-12345"
+ *         language:
+ *           type: string
+ *           description: The language in which the report should be generated.
+ *           enum: ["fi", "en"]
+ *           default: "fi"
+ *           example: "en"
+ *         email:
+ *           type: string
+ *           description: The email address to send the report.
+ *           example: "user@example.com"
+ *       required:
+ *         - registration_number
+ *         - report_id
+ *         - email
+ */
+export const validateSendReport = object().shape({
+    registration_number: string().trim().required("Registration number is required"),
+    report_id: string().trim().required("Report id is required"),
+    language: string().trim().oneOf(["fi","en"],"Invalid language").default("fi"),
+    email: string().trim().email("Invalid email").required("Email is required"),
+});

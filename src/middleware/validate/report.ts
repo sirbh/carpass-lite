@@ -5,7 +5,8 @@ import {
     saveReportValidator,
     populateReportValidator,
     initializeReportValidator,
-    getPutObejctURLsValidator
+    getPutObejctURLsValidator,
+    validateSendReport,
 } from "../../utility/validators/report";
 
 export const validateGetReportStructure = (
@@ -90,6 +91,22 @@ export const validateGetPutObjectUrls = (
     next: NextFunction
 ) => {
     getPutObejctURLsValidator
+        .validate(req.body, { abortEarly: false })
+        .then(() => {
+            next();
+        })
+        .catch((errors) => {
+            next(errors);
+        });
+};
+
+
+export const sendReportValidator = (
+    req: Request,
+    _res: Response,
+    next: NextFunction
+) => {
+    validateSendReport
         .validate(req.body, { abortEarly: false })
         .then(() => {
             next();
