@@ -908,7 +908,13 @@ export const sendReport = async (
     }
     );
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+      ], // Required for running as root in Docker
+    });
     const page = await browser.newPage();
     
     // Load your HTML content
