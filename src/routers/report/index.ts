@@ -29,7 +29,9 @@ const router = express.Router();
  *       - name: registration_number
  *         in: query
  *         description: Registration number of the vehicle.
- *         required: true
+ *       - name: production_number
+ *         in: query
+ *         description: Production number of the vehicle.
  *     security:
  *       - bearerAuth: []
  *     responses:

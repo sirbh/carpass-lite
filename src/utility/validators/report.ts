@@ -150,7 +150,8 @@ export const saveReportValidator = object().shape(
 );
 
 export const getReportValidator = object().shape({
-    registration_number: string().trim().required("Registration number is required"),
+    registration_number: string().trim(),
+    production_number: string().trim(),
     language: string().trim().oneOf(["fi", "en"], "Invalid language").default("fi"),
 });
 

@@ -346,11 +346,16 @@ export const getReport = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { registration_number } = getReportValidator.cast(req.query);
+  const { registration_number, production_number } = getReportValidator.cast(req.query);
+  const { organizationId } = req.params;
   try {
     const data = await prisma.report.findMany({
       where: {
-        registration_number,
+        OR:[
+          {registration_number},
+          {organization_id:parseInt(organizationId)},
+          {production_number},
+        ]
       },
     });
 
