@@ -77,7 +77,7 @@ jobs:
       - name: Run Command via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: carpass.fi
+          host: 95.216.143.81
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
