@@ -351,7 +351,7 @@ export const getReport = async (
   try {
     const data = await prisma.report.findMany({
       where: {
-        OR:[
+        AND:[
           {registration_number},
           {organization_id:parseInt(organizationId)},
           {production_number},
