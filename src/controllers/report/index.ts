@@ -57,10 +57,10 @@ export const getReportStructure = async (
             where: {
               AND: [
                 {
-                  report_type,
+                  report_type:"narrow",
                 },
                 {
-                  engine_type,
+                  engine_type:"petrol",
                 },
               ],
             },
