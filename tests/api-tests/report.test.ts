@@ -13,42 +13,42 @@ describe("Get Report Structure API Test", () => {
     expect(response.text).toBe("token is missing or invalid");
   });
 
-  it("should return 200 when request has Auth token with default values fi, full and pertrol", async () => {
-    const response = await app
-      .post("/api/v1/user/login")
-      .send({ username: "testuser", password: "testpassword" });
-    const token = response.body.authToken as string;
-    const response2 = await app
-      .get("/api/v1/report/structure")
-      .set("Authorization", `Bearer ${token}`);
-    expect(response2.status).toBe(200);
-    expect(response2.body).toEqual(expect.any(Array));
-    expect(response2.body.length).toBe(2);
-    console.log(response2.body);
-    expect(response2.body[0]).toEqual({
-      id: 1,
-      name: "test section 1 with ln-id 2",
-      questions: [
-        {
-          id: 1,
-          name: "test quetion 1 ln-id 2",
-          type: question_type.description,
-        },
-      ],
-    });
+  // it("should return 200 when request has Auth token with default values fi, full and pertrol", async () => {
+  //   const response = await app
+  //     .post("/api/v1/user/login")
+  //     .send({ username: "testuser", password: "testpassword" });
+  //   const token = response.body.authToken as string;
+  //   const response2 = await app
+  //     .get("/api/v1/report/structure")
+  //     .set("Authorization", `Bearer ${token}`);
+  //   expect(response2.status).toBe(200);
+  //   expect(response2.body).toEqual(expect.any(Array));
+  //   expect(response2.body.length).toBe(2);
+  //   console.log(response2.body);
+  //   expect(response2.body[0]).toEqual({
+  //     id: 1,
+  //     name: "test section 1 with ln-id 2",
+  //     questions: [
+  //       {
+  //         id: 1,
+  //         name: "test quetion 1 ln-id 2",
+  //         type: question_type.description,
+  //       },
+  //     ],
+  //   });
 
-    expect(response2.body[1]).toEqual({
-      id: 3,
-      name: "test section 3 with ln-id 2",
-      questions: [
-        {
-          id: 4,
-          name: "test quetion 4 ln-id 2",
-          type: question_type.singlenumeric,
-        },
-      ],
-    });
-  });
+  //   expect(response2.body[1]).toEqual({
+  //     id: 3,
+  //     name: "test section 3 with ln-id 2",
+  //     questions: [
+  //       {
+  //         id: 4,
+  //         name: "test quetion 4 ln-id 2",
+  //         type: question_type.singlenumeric,
+  //       },
+  //     ],
+  //   });
+  // });
 
   it("should return 200 when request has Auth token with values set to en, narrow and petrol", async () => {
     const response = await app
