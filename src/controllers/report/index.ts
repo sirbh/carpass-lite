@@ -521,7 +521,7 @@ export const populateReport = async (
           },
           {
             question: language === "en" ? "Inspection date" : "Tarkastuspäivä",
-            comment: reportData!.updated_at,
+            comment: reportData!.updated_at?.toLocaleDateString(),
           },
           {
             question:
