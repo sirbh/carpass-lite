@@ -2,7 +2,7 @@
 
 ### Environment
 
-`.env` file with
+`.env` file with.
 
 ```
 DATABASE_URL="postgresql://trustcar:password@localhost:5432/trust_car_dev_db?schema=public"
